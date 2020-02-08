@@ -1,0 +1,12 @@
+# Dependency directory
+node_modules
+
+# Debug log from npm
+npm-debug.log
+
+# Environment Variables should NEVER be published BUT FOR THE LEARNING PURPOSES WE WILL PUBLISH IT
+.env
+
+# Exclude the npm package lock file,
+# as libsass binary downloads might break again in the future
+package-lock.json
