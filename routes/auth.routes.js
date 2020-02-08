@@ -1,27 +1,105 @@
 const express = require('express');
-const authRouter = express.Router();
-const User = require('../models/User.model')
-
+const router = express.Router();
 const bcryptjs = require('bcryptjs');
+const mongoose = require('mongoose');
 const saltRounds = 10;
 
-authRouter.get('/signup', (req, res) => res.render('auth-views/signup'));
+const User = require('../models/User.model');
 
-authRouter.post('/signup', (req,res, next) => {
+const routeGuard = require('../configs/route-guard.config');
+
+// const { Router } = require('express');
+// const router = new Router();
+
+// signup
+
+// .get() route ==> to display the signup form to users
+router.get('/signup', (req, res) => res.render('auth/signup'));
+
+// .post() route ==> to process form data
+router.post('/signup', (req, res, next) => {
   const { username, email, password } = req.body;
+
+  if (!username || !email || !password) {
+    res.render('auth/signup', { errorMessage: 'All fields are mandatory. Please provide your username, email and password.' });
+    return;
+  }
+
+  const regex = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,}/;
+  if (!regex.test(password)) {
+    res
+      .status(500)
+      .render('auth/signup', { errorMessage: 'Password needs to have at least 6 chars and must contain at least one number, one lowercase and one uppercase letter.' });
+    return;
+  }
 
   bcryptjs
     .genSalt(saltRounds)
     .then(salt => bcryptjs.hash(password, salt))
     .then(hashedPassword => {
-      return User.create({username, email, passwordHash: hashedPassword })
+      // console.log(`Password hash: ${hashedPassword}`)
+      return User.create({
+        // username: username
+        username,
+        email,
+        passwordHash: hashedPassword
+      })
+        .then(user => res.render('users/user-profile', { user }))
+        .catch(err => {
+          if (err instanceof mongoose.Error.ValidationError) {
+            // console.log(`err: ====> `, err);
+            res.status(500).render('auth/signup', { errorMessage: err.message });
+          } else if (err.code === 11000) {
+            res.status(500).render('auth/signup', {
+              errorMessage: 'Username and email need to be unique. Either username or email is already used.'
+            });
+          } else {
+            next(err);
+          }
+        });
     })
-    .then(userFromDB => {console.log('Newly created user is: ', userFromDB);
-    res.redirect('/userProfile');
-  })
-    .catch(error => next(error));
+    .catch(err => next(err));
 });
 
-authRouter.get('/userProfile', (req, res) => res.render('users/user-profile'));
+// login
 
-module.exports = authRouter
+router.get('/login', (req, res) => res.render('auth/login'));
+
+router.post('/login', (req, res, next) => {
+  // console.log('SESSION =====> ', req.session);
+  const { email, password } = req.body;
+  if (!email || !password) {
+    res.render('auth/signup', { errorMessage: 'All fields are mandatory. Please provide your both, email and password.' });
+    return;
+  }
+  //            email: email
+  User.findOne({ email })
+    .then(user => {
+      if (!user) {
+        res.render('auth/login', { errorMessage: 'Email is not registered. Try with other email.' });
+        return;
+      } else if (bcryptjs.compareSync(password, user.passwordHash)) {
+        // res.render('users/user-profile', { user });
+        req.session.currentUser = user;
+        res.redirect('/userProfile');
+      } else {
+        res.render('auth/login', { errorMessage: 'Incorrect password.' });
+      }
+    })
+    .catch(err => next(err));
+});
+
+// logout
+
+router.post('/logout', routeGuard, (req, res) => {
+  req.session.destroy();
+  res.redirect('/');
+});
+
+router.get('/userProfile', routeGuard, (req, res) => {
+  // console.log('USER IN SESSION: ', req.session.currentUser);
+  res.render('users/user-profile');
+});
+
+module.exports = router;
+
