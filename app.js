@@ -12,7 +12,7 @@ const mongoose = require('mongoose');
 const bindUserToViewLocals = require('./configs/user-in-view-locals.config');
 
 // Set up the database
-require('./configs/db.config');
+// require('./configs/db.config');
 
 // Routers
 const indexRouter = require('./routes/index.routes');
@@ -21,7 +21,7 @@ const authRouter = require('./routes/auth.routes');
 const app = express();
 
 // use session here:                 V
-require('./configs/session.config')(app);
+// require('./configs/session.config')(app);
 //                       ^
 //                       |
 // the "app" that gets passed here
@@ -32,7 +32,7 @@ require('./configs/session.config')(app);
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'hbs');
 
-// app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(favicon(path.join(__dirname, 'public', 'images', 'favicon.ico')));
 app.use(logger('dev'));
 app.use(express.json());

@@ -17,3 +17,8 @@ npm-debug.log
 .elasticbeanstalk/*
 !.elasticbeanstalk/*.cfg.yml
 !.elasticbeanstalk/*.global.yml
+
+# Comment out mongodb config to test
+
+/configs/db.config.js
+/configs/session.config.js
