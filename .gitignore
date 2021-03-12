@@ -1,5 +1,8 @@
 # Dependency directory
-node_modules
+node_modules/
+
+# AWS Elastic Beanstalk
+.elasticbeanstalk/
 
 # Debug log from npm
 npm-debug.log
@@ -9,4 +12,8 @@ npm-debug.log
 
 # Exclude the npm package lock file,
 # as libsass binary downloads might break again in the future
-package-lock.json
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml
